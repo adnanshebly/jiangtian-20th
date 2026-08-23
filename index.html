@@ -269,6 +269,31 @@
     .lb-prev{left:4vw}.lb-next{right:4vw}
   }
 
+  /* ---- 背景音乐 ---- */
+  .bgm-btn{
+    position:fixed;right:26px;bottom:26px;z-index:150;
+    width:48px;height:48px;border-radius:50%;
+    border:1px solid var(--gold);cursor:pointer;
+    background:rgba(248,247,229,.85);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:0 4px 18px rgba(29,29,29,.16);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .3s, background .3s;
+  }
+  .bgm-btn:hover{background:rgba(179,156,79,.18)}
+  .bgm-btn svg{width:20px;height:20px;fill:var(--gold-deep)}
+  .bgm-btn .ring{
+    position:absolute;inset:-1px;border-radius:50%;
+    border:1px solid transparent;border-top-color:var(--gold);
+    opacity:0;transition:opacity .4s;
+  }
+  .bgm-btn.playing .ring{opacity:1;animation:spin 3.2s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .bgm-btn .note-off{display:none}
+  .bgm-btn:not(.playing) .note-on{display:none}
+  .bgm-btn:not(.playing) .note-off{display:block}
+  @media (max-width:640px){.bgm-btn{right:18px;bottom:18px;width:44px;height:44px}}
+
   /* ---- 页脚 ---- */
   footer{
     background:var(--dark);color:rgba(248,247,229,.7);
@@ -521,7 +546,15 @@
 
 <footer>
   <div class="fin">廿载淬钢 奋楫前行　——　天重江天二十周年纪念影像集</div>
+  <div class="fin" style="margin-top:1.2em">背景音乐 Heartbreaking · Kevin MacLeod（incompetech.com · CC BY 4.0）</div>
 </footer>
+
+<audio id="bgm" src="audio/bgm.mp3" loop preload="auto"></audio>
+<button class="bgm-btn" id="bgmBtn" aria-label="背景音乐开关" title="背景音乐">
+  <span class="ring"></span>
+  <svg class="note-on" viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+  <svg class="note-off" viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" opacity=".45"/><path d="M4 4l16 16" stroke="var(--gold-deep)" stroke-width="1.6" fill="none"/></svg>
+</button>
 
 <div class="lightbox" id="lightbox">
   <div class="lb-count" id="lbCount"></div>
@@ -748,6 +781,25 @@ const ALBUMS = [
     ]
   }
 ];
+
+/* ===== 背景音乐 ===== */
+const bgm = document.getElementById("bgm"),
+      bgmBtn = document.getElementById("bgmBtn");
+bgm.volume = 0.42;
+function bgmPlay(){ bgm.play().catch(()=>{}); }
+bgm.addEventListener("play", ()=>bgmBtn.classList.add("playing"));
+bgm.addEventListener("pause", ()=>bgmBtn.classList.remove("playing"));
+bgmBtn.addEventListener("click", e=>{
+  e.stopPropagation();
+  bgm.paused ? bgmPlay() : bgm.pause();
+});
+/* 浏览器要求首次交互后才能出声：第一次点击/触摸/按键时自动开始 */
+["pointerdown","touchstart","keydown"].forEach(ev=>
+  document.addEventListener(ev, function auto(){
+    bgmPlay();
+    ["pointerdown","touchstart","keydown"].forEach(e2=>document.removeEventListener(e2, auto));
+  }, {passive:true})
+);
 
 /* ===== 渲染画廊 ===== */
 const ALL = [];
